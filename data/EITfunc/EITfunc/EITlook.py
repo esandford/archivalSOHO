@@ -50,13 +50,12 @@ def normal_equation(X,order,Y,Yerr):
     
     return B
 
-def interpolate_darkcurrent(obsTime, darkFramesFile):
-    darkFramesData = np.genfromtxt(darkFramesFile)
-    dark_times = darkFramesData[:,0]
-    dark_fluxes = darkFramesData[:,1]
-    dark_uncs = darkFramesData[:,2]
+def interpolate_darkcurrent(obsTime, darkFramesArr):
+    dark_times = darkFramesArr[:,0]
+    dark_fluxes = darkFramesArr[:,1]
+    dark_uncs = darkFramesArr[:,2]
 
-    i_prev = np.arange(len(darkFramesData))[dark_times < obsTime][-1]
+    i_prev = np.arange(len(darkFramesArr))[dark_times < obsTime][-1]
     i_next = i_prev + 1
 
     interp_dark_flux = dark_fluxes[i_prev] + ((dark_fluxes[i_next] - dark_fluxes[i_prev])*((obsTime - dark_times[i_prev])/(dark_times[i_next]-dark_times[i_prev])))
@@ -175,18 +174,18 @@ def plot_full_sun_EIT(fitsFileName, header, data, xcenter=512, ycenter=512, save
 
     return
 
-def detect_bright_spots(data, mask=False):
+def detect_pinholes(data, mask=False):
     """
     return True if the bright spots on the CCD are present in this image.
     """
     image_idxs = np.indices((1024, 1024))
     
-    brightspot1_mask = ( ((image_idxs[0,:,:] - 1023)**2 + (image_idxs[1,:,:] - 580)**2) <= 200.**2 ) & ( image_idxs[0,:,:] > 931 ) & ~np.isnan(data)
-    brightspot2_mask = ( ((image_idxs[0,:,:] - 1023)**2 + (image_idxs[1,:,:] - 130)**2) <= 150.**2 ) & ( image_idxs[0,:,:] > 931 ) & ~np.isnan(data)
-    brightspot1_comp_mask = ( ((image_idxs[0,:,:] - 0)**2 + (image_idxs[1,:,:] - 580)**2) <= 200.**2 ) & ( image_idxs[0,:,:] < 92 ) & ~np.isnan(data)
-    brightspot2_comp_mask = ( ((image_idxs[0,:,:] - 0)**2 + (image_idxs[1,:,:] - 130)**2) <= 150.**2 ) & ( image_idxs[0,:,:] < 92 ) & ~np.isnan(data)
-    brightspot1small_mask = ( ((image_idxs[0,:,:] - 1023)**2 + (image_idxs[1,:,:] - 560)**2) <= 50.**2 ) & ~np.isnan(data)
-    brightspot1small_comp_mask = ( ((image_idxs[0,:,:] - 0)**2 + (image_idxs[1,:,:] - 560)**2) <= 50.**2 ) & ~np.isnan(data)
+    brightspot1_mask = ( ((image_idxs[0,:,:] - 1022)**2 + (image_idxs[1,:,:] - 585)**2) <= 200.**2 ) & ( image_idxs[0,:,:] > 931 ) & ~np.isnan(data)
+    brightspot2_mask = ( ((image_idxs[0,:,:] - 1022)**2 + (image_idxs[1,:,:] - 130)**2) <= 150.**2 ) & ( image_idxs[0,:,:] > 931 ) & ~np.isnan(data)
+    brightspot1_comp_mask = ( ((image_idxs[0,:,:] - 1)**2 + (image_idxs[1,:,:] - 585)**2) <= 200.**2 ) & ( image_idxs[0,:,:] < 92 ) & ~np.isnan(data)
+    brightspot2_comp_mask = ( ((image_idxs[0,:,:] - 1)**2 + (image_idxs[1,:,:] - 130)**2) <= 150.**2 ) & ( image_idxs[0,:,:] < 92 ) & ~np.isnan(data)
+    brightspot1small_mask = ( ((image_idxs[0,:,:] - 1016)**2 + (image_idxs[1,:,:] - 557)**2) <= 40.**2 ) & ~np.isnan(data)
+    brightspot1small_comp_mask = ( ((image_idxs[0,:,:] - 7)**2 + (image_idxs[1,:,:] - 557)**2) <= 40.**2 ) & ~np.isnan(data)
 
     bs1 = False
     bs1small = False
@@ -203,18 +202,19 @@ def detect_bright_spots(data, mask=False):
 
     return bs1, bs1small, bs2
 
-def mask_bright_spots(data, bs1, bs1small, bs2):
+def mask_pinholes(data, bs1, bs1small, bs2):
     """
     return True if the bright spots on the CCD are present in this image.
     """
     image_idxs = np.indices((1024, 1024))
     
-    brightspot1_mask = ( ((image_idxs[0,:,:] - 1023)**2 + (image_idxs[1,:,:] - 580)**2) <= 200.**2 ) & ( image_idxs[0,:,:] > 931 ) & ~np.isnan(data)
-    brightspot2_mask = ( ((image_idxs[0,:,:] - 1023)**2 + (image_idxs[1,:,:] - 130)**2) <= 150.**2 ) & ( image_idxs[0,:,:] > 931 ) & ~np.isnan(data)
-    brightspot1_comp_mask = ( ((image_idxs[0,:,:] - 0)**2 + (image_idxs[1,:,:] - 580)**2) <= 200.**2 ) & ( image_idxs[0,:,:] < 92 ) & ~np.isnan(data)
-    brightspot2_comp_mask = ( ((image_idxs[0,:,:] - 0)**2 + (image_idxs[1,:,:] - 130)**2) <= 150.**2 ) & ( image_idxs[0,:,:] < 92 ) & ~np.isnan(data)
-    brightspot1small_mask = ( ((image_idxs[0,:,:] - 1023)**2 + (image_idxs[1,:,:] - 560)**2) <= 50.**2 ) & ~np.isnan(data)
-    brightspot1small_comp_mask = ( ((image_idxs[0,:,:] - 0)**2 + (image_idxs[1,:,:] - 560)**2) <= 50.**2 ) & ~np.isnan(data)
+    brightspot1_mask = ( ((image_idxs[0,:,:] - 1022)**2 + (image_idxs[1,:,:] - 585)**2) <= 200.**2 ) & ( image_idxs[0,:,:] > 931 ) & ~np.isnan(data)
+    brightspot2_mask = ( ((image_idxs[0,:,:] - 1022)**2 + (image_idxs[1,:,:] - 130)**2) <= 150.**2 ) & ( image_idxs[0,:,:] > 931 ) & ~np.isnan(data)
+    brightspot1_comp_mask = ( ((image_idxs[0,:,:] - 1)**2 + (image_idxs[1,:,:] - 585)**2) <= 200.**2 ) & ( image_idxs[0,:,:] < 92 ) & ~np.isnan(data)
+    brightspot2_comp_mask = ( ((image_idxs[0,:,:] - 1)**2 + (image_idxs[1,:,:] - 130)**2) <= 150.**2 ) & ( image_idxs[0,:,:] < 92 ) & ~np.isnan(data)
+    brightspot1small_mask = ( ((image_idxs[0,:,:] - 1016)**2 + (image_idxs[1,:,:] - 557)**2) <= 40.**2 ) & ~np.isnan(data)
+    brightspot1small_comp_mask = ( ((image_idxs[0,:,:] - 7)**2 + (image_idxs[1,:,:] - 557)**2) <= 40.**2 ) & ~np.isnan(data)
+
 
     maskedData = copy.deepcopy(data)
     
@@ -224,10 +224,14 @@ def mask_bright_spots(data, bs1, bs1small, bs2):
         maskedData[brightspot1small_mask] = np.nan
     if bs2 is True:
         maskedData[brightspot2_mask] = np.nan
+
+    #if both of these are true just exclude the entire top of image
+    if bs1 is True and bs2 is True:
+        maskedData[( image_idxs[0,:,:] > 931 )] = np.nan
     
     return maskedData
     
-def flux_in_annuli(data, xcenter, ycenter, rExtrapolate=512):
+def flux_in_annuli(data, darkFlux, xcenter, ycenter, rExtrapolate=512):
     #calculate flux in annuli of increasing radius
 
     image_idxs = np.indices((1024, 1024))
@@ -250,7 +254,7 @@ def flux_in_annuli(data, xcenter, ycenter, rExtrapolate=512):
 
         annFlux = np.sum(data[annulus_mask])
         annFluxes[i] = annFlux
-        annFluxes_unc[i] = np.sqrt(annFlux + (annNpix * 852.0))
+        annFluxes_unc[i] = np.sqrt(annFlux + (annNpix * darkFlux))
 
     for i in range(rExtrapolate, int(np.round(512.*np.sqrt(2),0))):
         r = rs[i]
@@ -264,9 +268,9 @@ def flux_in_annuli(data, xcenter, ycenter, rExtrapolate=512):
         annNpixs_unc[i] = np.sqrt(pred_Npix)
 
         annFlux_known = np.sum(data[annulus_mask])
-        annFlux_known_unc = np.sqrt(annFlux_known + (actual_Npix * 852.0))
+        annFlux_known_unc = np.sqrt(annFlux_known + (actual_Npix * darkFlux))
         
-        annFlux_tot = annFlux_known * (pred_Npix/actual_Npix)
+        annFlux_tot = annFlux_known * (pred_Npix/actual_Npix) #decided to keep this mean rather than median because it makes the flux_in_annulus vs. r curves smoother over rExtrapolate
         #using standard error propagation formula
         annFlux_tot_unc = np.sqrt( ((pred_Npix/actual_Npix)**2 * annFlux_known_unc**2) + ((annFlux_known/actual_Npix)**2 * pred_Npix ) )
 
@@ -280,30 +284,30 @@ def overall_flux(annFluxes, annFluxes_unc):
     overallFlux_unc = np.sqrt(np.sum(annFluxes_unc**2))
     return overallFlux, overallFlux_unc
 
-def image_to_LCpoint(data, xcenter=512, ycenter=512, maskBrightSpots=False):
+def image_to_LCpoint(data, darkFlux, xcenter=512, ycenter=512, maskBrightSpots=False):
     
     if maskBrightSpots is True:
-        bs1, bs1small, bs2 = detect_bright_spots(data,mask=True)
+        bs1, bs1small, bs2 = detect_pinholes(data,mask=True)
         if np.any((bs1, bs1small, bs2)):
-            data = mask_bright_spots(data, bs1, bs1small, bs2)
+            data = mask_pinholes(data, bs1, bs1small, bs2)
             
-    rs, annNpixs, annNpixs_unc, annFluxes, annFluxes_unc = flux_in_annuli(data, xcenter, ycenter)
+    rs, annNpixs, annNpixs_unc, annFluxes, annFluxes_unc = flux_in_annuli(data, darkFlux, xcenter, ycenter)
 
     overallFlux, overallFlux_unc = overall_flux(annFluxes, annFluxes_unc)
 
     return overallFlux, overallFlux_unc
 
-def plot_full_sun_annuli_EIT(fitsFileName, header, data, figtitle, xcenter=512, ycenter=512, save=False, saveFileName=None, maskBrightSpots=False):
+def plot_full_sun_annuli_EIT(fitsFileName, header, data, darkFlux, figtitle, xcenter=512, ycenter=512, save=False, saveFileName=None, maskBrightSpots=False):
 
-    rs, annNpixs, annNpixs_unc, annFluxes, annFluxes_unc = flux_in_annuli(data, xcenter, ycenter, rExtrapolate=512)
+    rs, annNpixs, annNpixs_unc, annFluxes, annFluxes_unc = flux_in_annuli(data, darkFlux, xcenter, ycenter, rExtrapolate=512)
     plotMasked = False
 
     if maskBrightSpots is True:
-        bs1, bs1small, bs2 = detect_bright_spots(data,mask=True)
+        bs1, bs1small, bs2 = detect_pinholes(data,mask=True)
         if np.any((bs1, bs1small, bs2)):
             plotMasked = True
-            maskedData = mask_bright_spots(data, bs1, bs1small, bs2)
-            rs, masked_annNpixs, masked_annNpixs_unc, masked_annFluxes, masked_annFluxes_unc = flux_in_annuli(maskedData, xcenter, ycenter, rExtrapolate=512)
+            maskedData = mask_pinholes(data, bs1, bs1small, bs2)
+            rs, masked_annNpixs, masked_annNpixs_unc, masked_annFluxes, masked_annFluxes_unc = flux_in_annuli(maskedData, darkFlux, xcenter, ycenter, rExtrapolate=512)
 
     
     fig = plt.figure(figsize=(24,8))
@@ -402,7 +406,7 @@ def plot_full_sun_annuli_EIT(fitsFileName, header, data, figtitle, xcenter=512, 
 
     return
 
-def plot_flux_extrapolation_EIT(fitsFileName, header, data, figtitle, xcenter=512, ycenter=512, save=False, saveFileName=None):
+def plot_flux_extrapolation_EIT(fitsFileName, header, data, darkFlux, figtitle, xcenter=512, ycenter=512, save=False, saveFileName=None):
 
     #calculate flux in annuli of increasing radius
     image_idxs = np.indices((1024, 1024))
@@ -418,7 +422,7 @@ def plot_flux_extrapolation_EIT(fitsFileName, header, data, figtitle, xcenter=51
         annFluxes[i] = np.sum(data[annulus_mask])
         annNpix = np.sum(np.ones_like(data)[annulus_mask])
         annNpixs[i] = annNpix
-        annFluxes_unc[i] = np.sqrt(np.sum(data[annulus_mask]) + (annNpix * 852.0))
+        annFluxes_unc[i] = np.sqrt(np.sum(data[annulus_mask]) + (annNpix * darkFlux))
 
     fig = plt.figure(figsize=(24,24))
     gs = gridspec.GridSpec(ncols=12, nrows=16, figure=fig)
