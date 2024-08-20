@@ -191,6 +191,20 @@ def detect_pinholes(data, mask=False):
     bs1small = False
     bs2 = False
 
+    """
+    print("bright spot 1")
+    print("spot mean is {0}".format(np.mean(data[brightspot1_mask])))
+    print("comp mean is {0}".format(np.mean(data[brightspot1_comp_mask])))
+    
+    print("bright spot 1 small")
+    print("spot mean is {0}".format(np.mean(data[brightspot1small_mask])))
+    print("comp mean is {0}".format(np.mean(data[brightspot1small_comp_mask])))
+    
+    print("bright spot 2")
+    print("spot mean is {0}".format(np.mean(data[brightspot2_mask])))
+    print("comp mean is {0}".format(np.mean(data[brightspot2_comp_mask])))
+    """
+
     if np.mean(data[brightspot1_mask]) > 2.*np.mean(data[brightspot1_comp_mask]):
         bs1 = True
 
