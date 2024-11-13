@@ -330,19 +330,23 @@ def plot_full_sun_annuli_EIT(fitsFileName, header, data, darkFlux, figtitle, xce
     ax1 = fig.add_subplot(gs[0:6, 6:])
     
     cs = ax0.imshow(np.log10(data),cmap='Greys_r',interpolation='None',origin="lower")
-    ax0.set_title(figtitle,fontsize=20,pad=10)
+    ax0.set_title(figtitle,fontsize=24,pad=10)
     ax0.set_xticks([0,512,1024])
     ax0.set_yticks([0,512,1024])
-    ax0.tick_params(axis='both', which='major', labelsize=16)
+    ax0.tick_params(axis='both', which='major', labelsize=20)
+    ax0.set_xlabel('pixel index', fontsize=24)
+    ax0.set_ylabel('pixel index', fontsize=24)
     
     divider = make_axes_locatable(ax0)
     cax = divider.append_axes("right", size="5%", pad="2%")
     fig.add_axes(cax)
     cb = fig.colorbar(cs, cax=cax)
-    cb.set_label(label=r"$\log_{10}$(count rate [DN/s])",fontsize=18)
-    cax.tick_params(labelsize=16) 
+    cb.set_label(label="flux [DN/s]",fontsize=24)
+    cax.set_yticks([-1, 0, 1, 2])
+    cax.set_yticklabels([r'$10^{-1}$', r'$10^{0}$', r'$10^{1}$', r'$10^{2}$'])
+    cax.tick_params(axis='both', which='major', labelsize=26) 
 
-    sliceColors = ['r', 'darkorange', 'y', 'g', 'b', 'c', 'm', 'k']
+    sliceColors = ['r', 'darkorange', 'y', 'g', 'b', 'c', 'm', '#432371']
 
     rwidth = np.max(np.array((np.abs(xcenter-512),np.abs(ycenter-512)))) + 512
 
@@ -364,7 +368,7 @@ def plot_full_sun_annuli_EIT(fitsFileName, header, data, darkFlux, figtitle, xce
     ax0.set_xlim(0,1024)
     ax0.set_ylim(0,1024)
     
-    ax1.axvline(512,color='k',ls='-')
+    ax1.axvline(512,color='k',ls=':')
     ax1.plot(np.arange(xcenter),data[ycenter,0:xcenter][::-1],ls='-',color=sliceColors[4])
     ax1.plot(np.arange(1024-xcenter),data[ycenter,xcenter:],  ls='-',color=sliceColors[0])
     ax1.plot(np.arange(ycenter),data[0:ycenter,xcenter][::-1],ls='-',color=sliceColors[6])
@@ -397,20 +401,21 @@ def plot_full_sun_annuli_EIT(fitsFileName, header, data, darkFlux, figtitle, xce
     ax1.plot(np.arange(ur_length)*np.sqrt(2),ur,ls='-',color=sliceColors[1])
             
     ax1.set_yscale("log")
-    ax1.set_xticklabels([])
-    ax1.set_xlabel("distance from center [pixels]",fontsize=18)
-    ax1.set_ylabel("count rate [DN/s]",fontsize=18)
-    ax1.tick_params(axis='both', which='major', labelsize=16)
+    ax1.set_xticks([0,100,200,300,400,512,724])
+    ax1.set_xlabel("distance from center [pixel side lengths]",fontsize=24)
+    ax1.set_ylabel("flux [DN/s]",fontsize=24)
+    ax1.tick_params(axis='both', which='major', labelsize=20)
 
     if plotMasked is True:
-        ax1.errorbar(rs, annFluxes,yerr=annFluxes_unc, capsize=0, color='k', elinewidth=0.5,alpha=0.5)
+        ax1.errorbar(rs, annFluxes,yerr=annFluxes_unc, capsize=0, color='k', elinewidth=0.5,alpha=0.5,label='total flux in annulus')
         ax1.errorbar(rs, masked_annFluxes,yerr=masked_annFluxes_unc, capsize=0, color='b', elinewidth=0.5,alpha=0.5)
     else:
-        ax1.errorbar(rs, annFluxes,yerr=annFluxes_unc, capsize=0, color='k', elinewidth=0.5,alpha=1)
+        ax1.errorbar(rs, annFluxes,yerr=annFluxes_unc, capsize=0, color='k', elinewidth=0.5,alpha=1,label='total flux in annulus')
     
     ax1.set_xlim(-1,512*np.sqrt(2))
+    ax1.legend(loc='upper right',frameon=False,prop={'size': 20})
     
-    plt.subplots_adjust(wspace=0.4)
+    plt.subplots_adjust(wspace=1)
 
     if save is True:
         plt.savefig("{0}".format(saveFileName),bbox_inches="tight")
