@@ -311,7 +311,7 @@ def image_to_LCpoint(data, darkFlux, xcenter=512, ycenter=512, maskBrightSpots=F
 
     return overallFlux, overallFlux_unc
 
-def plot_full_sun_annuli_EIT(fitsFileName, header, data, darkFlux, figtitle, xcenter=512, ycenter=512, save=False, saveFileName=None, maskBrightSpots=False):
+def plot_full_sun_annuli_EIT(fitsFileName, header, data, darkFlux, figtitle, xcenter=512, ycenter=512, save=False, saveFileName=None, maskBrightSpots=False, plotBrightSpotMasks=False):
 
     rs, annNpixs, annNpixs_unc, annFluxes, annFluxes_unc = flux_in_annuli(data, darkFlux, xcenter, ycenter, rExtrapolate=512)
     plotMasked = False
@@ -367,6 +367,16 @@ def plot_full_sun_annuli_EIT(fitsFileName, header, data, darkFlux, figtitle, xce
 
     ax0.set_xlim(0,1024)
     ax0.set_ylim(0,1024)
+
+    if plotBrightSpotMasks is True:
+        circ1 = plt.Circle((557,1016),40,color='#FFFFFF',fill=False)
+        circ2 = plt.Circle((130,1022),150,color='#FFFFFF',fill=False)
+        circ3 = plt.Circle((585,1022),200,color='#FFFFFF',fill=False)
+        ax0.axhline(931,color='#FFFFFF')
+        ax0.add_patch(circ1)
+        ax0.add_patch(circ2)
+        ax0.add_patch(circ3)
+
     
     ax1.axvline(512,color='k',ls=':')
     ax1.plot(np.arange(xcenter),data[ycenter,0:xcenter][::-1],ls='-',color=sliceColors[4])
@@ -410,10 +420,14 @@ def plot_full_sun_annuli_EIT(fitsFileName, header, data, darkFlux, figtitle, xce
         ax1.errorbar(rs, annFluxes,yerr=annFluxes_unc, capsize=0, color='k', elinewidth=0.5,alpha=0.5,label='total flux in annulus')
         ax1.errorbar(rs, masked_annFluxes,yerr=masked_annFluxes_unc, capsize=0, color='b', elinewidth=0.5,alpha=0.5)
     else:
-        ax1.errorbar(rs, annFluxes,yerr=annFluxes_unc, capsize=0, color='k', elinewidth=0.5,alpha=1,label='total flux in annulus')
+        #ax1.errorbar(rs, annFluxes,yerr=annFluxes_unc, capsize=0, color='k', elinewidth=0.5,alpha=1,label='total flux in annulus')
+        ax1.plot(rs, annFluxes,color='k', alpha=1,label='total flux in annulus',zorder=2)
+        ax1.fill_between(rs, annFluxes-annFluxes_unc, annFluxes+annFluxes_unc,color='k',edgecolor='None',alpha=0.4,zorder=1)
     
     ax1.set_xlim(-1,512*np.sqrt(2))
     ax1.legend(loc='upper right',frameon=False,prop={'size': 20})
+
+
     
     plt.subplots_adjust(wspace=1)
 
