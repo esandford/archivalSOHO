@@ -312,23 +312,41 @@ linear_model = results_dicts[1]['mean'][0]*np.abs(metadata['HI-LAT-DEG']) + resu
 linear_model_m_unc = calc_uncertainty(results_dicts[1]['samples_equal'][:,0])
 linear_model_b_unc = calc_uncertainty(results_dicts[1]['samples_equal'][:,1])
 
+# we use the 0th entry in the latitude column because the data have already been sorted in order of increasing latitude
 x0 = np.cos(data[0,0]*(np.pi/180.))
 linearcos_model = results_dicts[2]['mean'][0] * (np.cos(metadata['HI-LAT-DEG']*(np.pi/180.)) - x0) + results_dicts[2]['mean'][1]
 linearcos_model_m_unc = calc_uncertainty(results_dicts[2]['samples_equal'][:,0])
 linearcos_model_b_unc = calc_uncertainty(results_dicts[2]['samples_equal'][:,1])
 
+print("uniform model")
+print("{0} +/- {1}".format(results_dicts[0]['mean'][0], uniform_model_b_unc))
+print("")
+
+print("linear model unc")
+print("{0} +/- {1}".format(results_dicts[1]['mean'][0], linear_model_m_unc))
+print("{0} +/- {1}".format(results_dicts[1]['mean'][1], linear_model_b_unc))
+print("")
+
+print("linearcos model unc")
+print("{0} +/- {1}".format(results_dicts[2]['mean'][0], linearcos_model_m_unc))
+print("{0} +/- {1}".format(results_dicts[2]['mean'][1], linearcos_model_b_unc))
+print("")
+
 if best_model==0:
     print('uniform best')
     LC_corr = LC[:,0]/linear_model
     LC_unc_corr = np.sqrt( (LC[:,2]/uniform_model)**2 + (uniform_model_b_unc**2 * ((LC[:,1])/uniform_model**2)**2) )
+    plot_uniform(data,mean=results_dicts[0]['mean'],samples_equal=results_dicts[0]['samples_equal'])
 elif best_model==1:
     print('linear best')
     LC_corr = LC[:,1]/linear_model
     LC_unc_corr = np.sqrt( (LC[:,2]/linear_model)**2 + (linear_model_m_unc**2 * ((LC[:,1]*np.abs(metadata['HI-LAT-DEG']))/linear_model**2)**2 ) + (linear_model_b_unc**2 * ((LC[:,1])/linear_model**2)**2) )
+    plot_linear(data,mean=results_dicts[1]['mean'],samples_equal=results_dicts[1]['samples_equal'])
 elif best_model==2:
     print('linearcos best')
     LC_corr = LC[:,1]/linearcos_model
     LC_unc_corr = np.sqrt( (LC[:,2]/linearcos_model)**2 + (linearcos_model_m_unc**2 * ((LC[:,1]*np.cos(metadata['HI-LAT-DEG']*(np.pi/180.)))/linearcos_model**2)**2 ) + (linearcos_model_b_unc**2 * ((LC[:,1])/linearcos_model**2)**2) )
+    plot_linearcos(data,mean=results_dicts[2]['mean'],samples_equal=results_dicts[2]['samples_equal'])
 
 toSave = np.vstack((LC[:,0], LC_corr, LC_unc_corr, LC[:,3], LC[:,4])).T
 header = 'average_observation_time[JD] flux[DN/s] flux_unc[DN/s] last_data_point_before_bakeout first_data_point_after_bakeout'
