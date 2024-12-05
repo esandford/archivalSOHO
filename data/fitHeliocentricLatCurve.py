@@ -55,9 +55,9 @@ data = np.genfromtxt("./heliocentricLat_{0}_corrected_{1}.txt".format(wavelength
 badDataMask = (data[:,1] <=0.5) | (data[:,1] > 1.75)
 data = data[~badDataMask]
 
-if wavelength == 195:
-    mask195oversampling = (data[:,0] > -3.25) & (data[:,0] <= -1.75)
-    data = data[~mask195oversampling]
+#if wavelength == 195:
+#    mask195oversampling = (data[:,-1] > 2450400) & (data[:,-1] < 2450500)
+#    data = data[~mask195oversampling]
 '''
 print(np.shape(data))
 fig, ax = plt.subplots(1,1,figsize=(12,6))
