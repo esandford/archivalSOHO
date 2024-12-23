@@ -268,7 +268,9 @@ def flux_in_annuli(data, darkFlux, xcenter, ycenter, rExtrapolate=512):
 
         annFlux = np.sum(data[annulus_mask])
         annFluxes[i] = annFlux
-        annFluxes_unc[i] = np.sqrt(annFlux + (annNpix * darkFlux))
+        # the below is the previous wrong version, when i thought that the dark frames were measuring thermal noise rather than analog-to-digital converter offset
+        #annFluxes_unc[i] = np.sqrt(annFlux + (annNpix * darkFlux))
+        annFluxes_unc[i] = np.sqrt(annFlux)
 
     for i in range(rExtrapolate, int(np.round(512.*np.sqrt(2),0))):
         r = rs[i]
@@ -816,8 +818,21 @@ def center_from_header(header):
     Get the central pixel from the information in the FITS header
     """
 
-    xcenter = header['CRPIX1'] - header['CRVAL1']/header['CDELT1']
-    ycenter = header['CRPIX2'] - header['CRVAL2']/header['CDELT2']
+    # spacecraft roll angle
+    rot = header['CROTA'] * (np.pi/180) # convert to radians
+    rot_mat = np.array(((np.cos(rot), np.sin(rot)),(-np.sin(rot), np.cos(rot))))
+
+    # header 'CRVAL1' and 'CRVAL2' are in world coordinates, algined with solar equator/poles
+    xy_wcs = np.atleast_2d(np.array((header['CRVAL1'], header['CRVAL2']))).T
+
+    # convert back to image coordinates
+    xy_img = np.matmul(rot_mat, xy_wcs)
+
+    xcenter = header['CRPIX1'] - xy_img[0][0]/header['CDELT1']
+    ycenter = header['CRPIX2'] - xy_img[1][0]/header['CDELT2']
+
+    #xcenter = header['CRPIX1'] - header['CRVAL1']/header['CDELT1']
+    #ycenter = header['CRPIX2'] - header['CRVAL2']/header['CDELT2']
 
     return xcenter, ycenter
 
