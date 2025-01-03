@@ -108,7 +108,9 @@ def flux_in_annuli(data, darkFlux, xcenter, ycenter, rExtrapolate=512):
 
         annFlux = np.sum(data[annulus_mask])
         annFluxes[i] = annFlux
-        annFluxes_unc[i] = np.sqrt(annFlux + (annNpix * darkFlux))
+        # the below is the previous wrong version, when i thought that the dark frames were measuring thermal noise rather than analog-to-digital converter offset
+        #annFluxes_unc[i] = np.sqrt(annFlux + (annNpix * darkFlux))
+        annFluxes_unc[i] = np.sqrt(annFlux)
 
     for i in range(rExtrapolate, int(np.round(512.*np.sqrt(2),0))):
         r = rs[i]
@@ -122,16 +124,19 @@ def flux_in_annuli(data, darkFlux, xcenter, ycenter, rExtrapolate=512):
         annNpixs_unc[i] = np.sqrt(pred_Npix)
 
         annFlux_known = np.sum(data[annulus_mask])
-        annFlux_known_unc = np.sqrt(annFlux_known + (actual_Npix * darkFlux))
-        
+        # the below is the previous wrong version, when i thought that the dark frames were measuring thermal noise rather than analog-to-digital converter offset
+        #annFlux_known_unc = np.sqrt(annFlux_known + (actual_Npix * darkFlux))
+        annFlux_known_unc = np.sqrt(annFlux_known)
+
         annFlux_tot = annFlux_known * (pred_Npix/actual_Npix) #decided to keep this mean rather than median because it makes the flux_in_annulus vs. r curves smoother over rExtrapolate
         #using standard error propagation formula
-        annFlux_tot_unc = np.sqrt( ((pred_Npix/actual_Npix)**2 * annFlux_known_unc**2) + ((annFlux_known/actual_Npix)**2 * pred_Npix ) )
+        annFlux_tot_unc = np.sqrt( ((pred_Npix/actual_Npix)**2 * annFlux_known) + ((annFlux_known/actual_Npix)**2 * pred_Npix ) )
 
         annFluxes[i] = annFlux_tot
         annFluxes_unc[i] = annFlux_tot_unc
 
     return rs, annNpixs, annNpixs_unc, annFluxes, annFluxes_unc
+
 
 def overall_flux(annFluxes, annFluxes_unc):
     overallFlux = np.sum(annFluxes)
@@ -177,7 +182,7 @@ def center_from_header(header):
 
 
 
-darkImgData =np.loadtxt("darkImgFluxes_nobakeout.txt")
+darkImgData =np.loadtxt("../darkImgFluxes_nobakeout.txt")
 print(np.shape(darkImgData))
 
 ts = []
@@ -185,8 +190,12 @@ ds = []
 fs = []
 us = []
 ws = []
+pinholes = []
+cameraErrors = []
 
-for year in range(1996, 2023):
+y1 = 1996
+y2 = 1999
+for year in range(y1, y2):
     jan1_thisyear = '{0}-01-01T00:00:00.000Z'.format(year)
     jan1_thisyear = astropy.time.Time(jan1_thisyear).jd
     print(year)
@@ -195,14 +204,14 @@ for year in range(1996, 2023):
         month = str(m).zfill(2)
         #catch missing months (i.e. July-September 1998)
         try:
-            days = sorted([int(f.path[-2:]) for f in os.scandir("./{0}/{1}/".format(year,month)) if f.is_dir()])
+            days = sorted([int(f.path[-2:]) for f in os.scandir("../{0}/{1}/".format(year,month)) if f.is_dir()])
         except FileNotFoundError:
             continue
         print(month)
         
         for d in days:
             day = str(d).zfill(2)
-            fitsFiles = os.scandir("./{0}/{1}/{2}/".format(year,month,day))
+            fitsFiles = os.scandir("../{0}/{1}/{2}/".format(year,month,day))
             print(d)
             
             for f in fitsFiles:
@@ -248,29 +257,50 @@ for year in range(1996, 2023):
                         fs.append(f)#*(medianSolarDistance/dSun))
                         us.append(u)#*(medianSolarDistance/dSun))
                         ws.append(w)
+
+                        bs1, bs1small, bs2 = detect_pinholes(data, mask=False)
+                        if np.any((bs1, bs1small, bs2)):
+                            pinholes.append(1)
+                        else:
+                            pinholes.append(0)
+
+                        cameraError = header['CAMERERR']
+                        if cameraError == "yes":
+                            cameraErrors.append(1)
+                        else:
+                            cameraErrors.append(0)
                                  
 ts = np.array(ts)
 ds = np.array(ds)
 fs = np.array(fs)
 us = np.array(us)
 ws = np.array(ws)
+pinholes = np.array(pinholes)
+cameraErrors = np.array(cameraErrors)
 
 ds = ds[np.argsort(ts)]
 fs = fs[np.argsort(ts)]
 us = us[np.argsort(ts)]
 ws = ws[np.argsort(ts)]
+pinholes=pinholes[np.argsort(ts)]
+cameraErrors=cameraErrors[np.argsort(ts)]
 ts = ts[np.argsort(ts)]
+
 
 print(np.shape(ts)) # =2877 in 1996, =2520 in 2011
 print(np.shape(ds))
 print(np.shape(fs))
 print(np.shape(us))
 print(np.shape(ws))
+print(np.shape(pinholes))
+print(np.shape(cameraErrors))
 
-toSave = np.vstack((ts.T,ds.T,ws.T,fs.T,us.T)).T
+toSave = np.vstack((ts.T,ds.T,ws.T,fs.T,us.T,pinholes.T,cameraErrors.T)).T
 print(np.shape(toSave))
 
-np.savetxt("./EIT_LC.txt",toSave,fmt="%f", header="t_obs[JD] solar_distance[m] wavelength[angstrom] unnorm_flux[DN/s] unnorm_flux_unc[DN/s]")
+np.savetxt("./EIT_LC_{0}_{1}.txt".format(y1,y2),toSave,fmt="%f", header="t_obs[JD] solar_distance[m] wavelength[angstrom] unnorm_flux[DN/s] unnorm_flux_unc[DN/s] pinholes[1ifYes] cameraError[1ifYes]")
+
+
 
 
 

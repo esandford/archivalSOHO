@@ -28,7 +28,7 @@ from scipy.stats import mode, binned_statistic
 
 import time
 
-__all__ = ['normal_equation', 'draw_solar_rot', 'plot_full_sun_EIT', 'plot_full_sun_annuli_EIT', 'plot_flux_extrapolation_EIT', 'plot_other_EIT', 'make_disk_model', 'make_disk_corona_model','chi_squared','fit_solar_center','find_solar_center','findCoL','center_from_header']
+__all__ = ['normal_equation','interpolate_darkcurrent', 'draw_solar_rot', 'plot_full_sun_EIT', 'detect_pinholes','mask_pinholes','flux_in_annuli','overall_flux','image_to_LCpoint','plot_full_sun_annuli_EIT', 'plot_flux_extrapolation_EIT', 'plot_other_EIT', 'make_disk_model', 'make_disk_corona_model','chi_squared','fit_solar_center','find_solar_center','findCoL','center_from_header']
 
 def normal_equation(X,order,Y,Yerr):
     """
@@ -284,11 +284,13 @@ def flux_in_annuli(data, darkFlux, xcenter, ycenter, rExtrapolate=512):
         annNpixs_unc[i] = np.sqrt(pred_Npix)
 
         annFlux_known = np.sum(data[annulus_mask])
-        annFlux_known_unc = np.sqrt(annFlux_known + (actual_Npix * darkFlux))
-        
+        # the below is the previous wrong version, when i thought that the dark frames were measuring thermal noise rather than analog-to-digital converter offset
+        #annFlux_known_unc = np.sqrt(annFlux_known + (actual_Npix * darkFlux))
+        annFlux_known_unc = np.sqrt(annFlux_known)
+
         annFlux_tot = annFlux_known * (pred_Npix/actual_Npix) #decided to keep this mean rather than median because it makes the flux_in_annulus vs. r curves smoother over rExtrapolate
         #using standard error propagation formula
-        annFlux_tot_unc = np.sqrt( ((pred_Npix/actual_Npix)**2 * annFlux_known_unc**2) + ((annFlux_known/actual_Npix)**2 * pred_Npix ) )
+        annFlux_tot_unc = np.sqrt( ((pred_Npix/actual_Npix)**2 * annFlux_known) + ((annFlux_known/actual_Npix)**2 * pred_Npix ) )
 
         annFluxes[i] = annFlux_tot
         annFluxes_unc[i] = annFlux_tot_unc
