@@ -193,8 +193,8 @@ ws = []
 pinholes = []
 cameraErrors = []
 
-y1 = 1996
-y2 = 1999
+y1 = 2019
+y2 = 2023
 for year in range(y1, y2):
     jan1_thisyear = '{0}-01-01T00:00:00.000Z'.format(year)
     jan1_thisyear = astropy.time.Time(jan1_thisyear).jd
@@ -204,14 +204,16 @@ for year in range(y1, y2):
         month = str(m).zfill(2)
         #catch missing months (i.e. July-September 1998)
         try:
-            days = sorted([int(f.path[-2:]) for f in os.scandir("../{0}/{1}/".format(year,month)) if f.is_dir()])
+            #days = sorted([int(f.path[-2:]) for f in os.scandir("../{0}/{1}/".format(year,month)) if f.is_dir()])
+            days = sorted([int(f.path[-2:]) for f in os.scandir("/Volumes/EXTERNAL_USB/{0}/{1}/".format(year,month)) if f.is_dir()])
         except FileNotFoundError:
             continue
         print(month)
         
         for d in days:
             day = str(d).zfill(2)
-            fitsFiles = os.scandir("../{0}/{1}/{2}/".format(year,month,day))
+            #fitsFiles = os.scandir("../{0}/{1}/{2}/".format(year,month,day))
+            fitsFiles = os.scandir("/Volumes/EXTERNAL_USB/{0}/{1}/{2}/".format(year,month,day))
             print(d)
             
             for f in fitsFiles:
